@@ -1,6 +1,18 @@
 import SwiftUI
 import PhotosUI
 import Vision
+import SwiftData
+
+@Model
+final class Prediction {
+    var frame: String
+    var rect: CGRect?
+    
+    init(frame: String, rect: CGRect?) {
+        self.frame = frame
+        self.rect = rect
+    }
+}
 
 struct ContentView: View {
     @State private var selectedImage: UIImage?
@@ -86,13 +98,21 @@ struct ContentView: View {
             request.imageCropAndScaleOption = .scaleFill
             
             let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up)
-            do {
-                try handler.perform([request])
+//            do {
+//                try handler.perform([request])
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do {
+                        try handler.perform([request])
+                    } catch let error as NSError {
+                        print("Failed to perform image request: \(error)")
+                        return
+                    }
+                }
                 
-            } catch {
-                print("Failed to perform detection: \(error)")
-                debugInfo += "\nFailed to perform detection: \(error)"
-            }
+//            } catch {
+//                print("Failed to perform detection: \(error)")
+//                debugInfo += "\nFailed to perform detection: \(error)"
+//            }
         }
         catch {
             print("Failed to perform detection: \(error)")
