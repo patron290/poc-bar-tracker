@@ -1,83 +1,183 @@
-import SwiftUI
-import PhotosUI
 import AVKit
+import PhotosUI
+import SwiftUI
 
-struct VideoPickerView: View {
-    @State private var videoURL: URL?
-    @State private var isShowingPicker = false
-    
-    var body: some View {
-        VStack {
-            Button("Select Video") {
-                isShowingPicker = true
-            }
-            
-            if let videoURL = videoURL {
-                VideoPlayer(player: AVPlayer(url: videoURL))
-                    .frame(height: 300)
-            }
-        }
-        .sheet(isPresented: $isShowingPicker) {
-            VideoPicker(completion: { url in
-                self.videoURL = url
-            })
+class VideoPickerViewModel: ObservableObject {
+    @Published var videoURL: URL?
+    var onPickVideo: ((URL) -> Void)?
+
+    func pickVideo() {
+        var config = PHPickerConfiguration()
+        config.filter = .videos
+        config.selectionLimit = 1
+
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+
+        // You'll need to present this picker from your SwiftUI view
+        if let windowScene = UIApplication.shared.connectedScenes.first
+            as? UIWindowScene,
+            let rootViewController = windowScene.windows.first?
+                .rootViewController
+        {
+            rootViewController.present(picker, animated: true)
         }
     }
 }
 
-struct VideoPicker: UIViewControllerRepresentable {
-    let completion: (URL) -> Void
-    
-    func makeUIViewController(context: Context) -> PHPickerViewController {
-        var config = PHPickerConfiguration()
-        config.filter = .videos
-        config.selectionLimit = 1
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = context.coordinator
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, PHPickerViewControllerDelegate {
-        let parent: VideoPicker
-        
-        init(_ parent: VideoPicker) {
-            self.parent = parent
-        }
-        
-        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            picker.dismiss(animated: true)
-            
-            guard let provider = results.first?.itemProvider else { return }
-            
-            if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
-                    if let error = error {
-                        print("Error loading video: \(error.localizedDescription)")
-                        return
+extension VideoPickerViewModel: PHPickerViewControllerDelegate {
+    func picker(
+        _ picker: PHPickerViewController,
+        didFinishPicking results: [PHPickerResult]
+    ) {
+        picker.dismiss(animated: true)
+
+        guard let provider = results.first?.itemProvider else { return }
+
+        if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+            provider.loadFileRepresentation(
+                forTypeIdentifier: UTType.movie.identifier
+            ) { [weak self] url, error in
+                guard let self = self else { return }
+
+                if let error = error {
+                    print("Error loading video: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let url = url else { return }
+
+                // Create a local copy of the video
+                let documentsDirectory = FileManager.default.urls(
+                    for: .documentDirectory, in: .userDomainMask)[0]
+                let uniqueFileName = "\(UUID().uuidString).mov"
+                let destinationURL = documentsDirectory.appendingPathComponent(
+                    uniqueFileName)
+
+                do {
+                    try FileManager.default.copyItem(
+                        at: url, to: destinationURL)
+                    DispatchQueue.main.async {
+                        self.videoURL = destinationURL
+                        self.onPickVideo?(destinationURL)
                     }
-                    
-                    guard let url = url else { return }
-                    
-                    // Create a local copy of the video
-                    let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                    let uniqueFileName = "\(UUID().uuidString).mov"
-                    let destinationURL = documentsDirectory.appendingPathComponent(uniqueFileName)
-                    
-                    do {
-                        try FileManager.default.copyItem(at: url, to: destinationURL)
+                } catch {
+                    print("Error copying video: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
+struct VideoPickerView: View {
+    @StateObject private var viewModel = VideoPickerViewModel()
+    @State private var isProcessing = false
+    @State private var processingProgress: Double = 0.0
+    @State private var currentFrame: UIImage?
+    @State private var extractor: VideoFrameExtractor?
+    @State private var extractedFrames: [UIImage] = []
+    @State private var extractedFramesCount: Int = 0
+    @State private var predictionResults: [String] = []
+
+    private var predictionService = PredictionService()
+
+    var body: some View {
+        VStack {
+            Button("Select Video") {
+                print("VideoProcessingView: Select Video button tapped")
+                viewModel.pickVideo()
+            }
+
+            //            if let videoURL = viewModel.videoURL {
+            //                VideoPlayer(player: AVPlayer(url: videoURL))
+            //                    .frame(height: 300)
+            //            }
+
+            if isProcessing {
+                ProgressView("Processing...")
+                    .progressViewStyle(.circular)
+                    .padding()
+            }
+
+            if let url = viewModel.videoURL {
+                Text("\(url.lastPathComponent)")
+            }
+
+            //            if let currentFrame = currentFrame {
+            //                Image(uiImage: currentFrame)
+            //                    .resizable()
+            //                    .scaledToFit()
+            //                    .frame(height: 300)
+            //            }
+
+            if isProcessing {
+                ProgressView(value: processingProgress, total: 1.0)
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .padding()
+
+                Text("\(Int(extractedFramesCount)) frames processed")
+
+                Text("\(Int(processingProgress * 100))%")
+                    .font(.headline)
+            }
+
+            if !isProcessing {
+                List(predictionResults, id: \.self) { result in
+                    //                    Image(uiImage: frame)
+                    //                        .resizable()
+                    //                        .scaledToFit()
+                    //                        .frame(height: 300)
+                    //                        .padding(.bottom)
+                    Text("\(result)")
+                }
+            }
+        }
+        .onAppear {
+            viewModel.onPickVideo = { url in
+                Task {
+                    await self.processVideo(url: url)
+                }
+
+            }
+        }
+    }
+
+    private func processVideo(url: URL) async {
+        isProcessing = true
+        processingProgress = 0.0
+        extractedFrames.removeAll()
+
+        do {
+            let extractor = try await VideoFrameExtractor(videoURL: url)
+            self.extractor = extractor
+
+            try await extractor.extractFrames { progress, extractedFrame in
+
+                DispatchQueue.main.async {
+                    self.processingProgress = progress
+                }
+
+                if let frame = extractedFrame {
+                    Task {
+                        let result = try self.predictionService.detectObjects(
+                            in: frame)
+
                         DispatchQueue.main.async {
-                            self.parent.completion(destinationURL)
+                            self.predictionResults.append(
+                                result.first ?? "No prediction")
                         }
-                    } catch {
-                        print("Error copying video: \(error.localizedDescription)")
+
                     }
                 }
+            }
+
+            await MainActor.run {
+                self.isProcessing = false
+            }
+        } catch {
+            print("Error processing video: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isProcessing = false
             }
         }
     }

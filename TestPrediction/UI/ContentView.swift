@@ -26,45 +26,47 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            if let image = processedImage ?? selectedImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
-            } else {
-                Text("No image selected")
-                    .foregroundColor(.gray)
-            }
-            
-            Button("Select Image") {
-                isImagePickerPresented = true
-            }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            
-            if selectedImage != nil {
-                Button("Detect Objects") {
-                    detectObjects()
-                }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            
-            List(detectedObjects, id: \.self) { object in
-                Text(object)
-            }
-            
-            Text(debugInfo)
-                            .font(.footnote)
-                            .padding()
+            VideoPickerView()
+//            if let image = processedImage ?? selectedImage {
+//                Image(uiImage: image)
+//                    .resizable()
+//                    .scaledToFit()
+//                    .frame(height: 300)
+//            } else {
+//                Text("No image selected")
+//                    .foregroundColor(.gray)
+//            }
+//            
+//            Button("Select Image") {
+//                isImagePickerPresented = true
+//            }
+//            .padding()
+//            .background(Color.blue)
+//            .foregroundColor(.white)
+//            .cornerRadius(10)
+//            
+//            if selectedImage != nil {
+//                Button("Detect Objects") {
+//                    detectObjects()
+//                }
+//                .padding()
+//                .background(Color.green)
+//                .foregroundColor(.white)
+//                .cornerRadius(10)
+//            }
+//            
+//            List(detectedObjects, id: \.self) { object in
+//                Text(object)
+//            }
+//            
+//            Text(debugInfo)
+//                            .font(.footnote)
+//                            .padding()
         }
         .sheet(isPresented: $isImagePickerPresented) {
             ImagePicker(image: $selectedImage)
         }
+//        VideoPickerView()
     }
     
     func detectObjects() {
@@ -94,12 +96,9 @@ struct ContentView: View {
                 self.processResults(results)
             }
             
-            // Set the input image size to match your model's expected input
             request.imageCropAndScaleOption = .scaleFill
             
             let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up)
-//            do {
-//                try handler.perform([request])
                 DispatchQueue.global(qos: .userInitiated).async {
                     do {
                         try handler.perform([request])
@@ -108,11 +107,6 @@ struct ContentView: View {
                         return
                     }
                 }
-                
-//            } catch {
-//                print("Failed to perform detection: \(error)")
-//                debugInfo += "\nFailed to perform detection: \(error)"
-//            }
         }
         catch {
             print("Failed to perform detection: \(error)")

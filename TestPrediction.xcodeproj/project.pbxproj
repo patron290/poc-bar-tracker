@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9303CF1B2C58058A0017E057 /* WeightPlate1.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 9303CF1A2C58058A0017E057 /* WeightPlate1.mlmodel */; };
+		930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930384962C6D257F007641D3 /* VideoPickerView.swift */; };
+		931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 931370972C5965EB008C5774 /* WeightPlate1.mlmodel */; };
+		937C154A2C5F5F7B00ED708F /* PredictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 937C15492C5F5F7B00ED708F /* PredictionService.swift */; };
+		93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */; };
 		93A5561B2C569B410028F8DD /* TestPredictionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A5561A2C569B410028F8DD /* TestPredictionApp.swift */; };
 		93A5561D2C569B410028F8DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A5561C2C569B410028F8DD /* ContentView.swift */; };
 		93A5561F2C569B410028F8DD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 93A5561E2C569B410028F8DD /* Assets.xcassets */; };
@@ -35,7 +38,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9303CF1A2C58058A0017E057 /* WeightPlate1.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = WeightPlate1.mlmodel; path = ../../WeightPlate1.mlmodel; sourceTree = "<group>"; };
+		930384962C6D257F007641D3 /* VideoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPickerView.swift; sourceTree = "<group>"; };
+		931370972C5965EB008C5774 /* WeightPlate1.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = WeightPlate1.mlmodel; sourceTree = "<group>"; };
+		93329B3F2C7478790058051C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		937C15492C5F5F7B00ED708F /* PredictionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionService.swift; sourceTree = "<group>"; };
+		93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrameExtractor.swift; sourceTree = "<group>"; };
 		93A556172C569B410028F8DD /* TestPrediction.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestPrediction.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93A5561A2C569B410028F8DD /* TestPredictionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionApp.swift; sourceTree = "<group>"; };
 		93A5561C2C569B410028F8DD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -46,6 +53,7 @@
 		93A556312C569B420028F8DD /* TestPredictionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestPredictionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		93A556352C569B420028F8DD /* TestPredictionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionUITests.swift; sourceTree = "<group>"; };
 		93A556372C569B420028F8DD /* TestPredictionUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		93B204C52C79B19E0052C0AB /* .swiftlint */ = {isa = PBXFileReference; lastKnownFileType = text; path = .swiftlint; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,9 +81,43 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		931370932C59654E008C5774 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				93A5561C2C569B410028F8DD /* ContentView.swift */,
+				930384962C6D257F007641D3 /* VideoPickerView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		931370942C596555008C5774 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		931370952C596569008C5774 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				937C15492C5F5F7B00ED708F /* PredictionService.swift */,
+				93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		931370962C5965E1008C5774 /* AIModels */ = {
+			isa = PBXGroup;
+			children = (
+				931370972C5965EB008C5774 /* WeightPlate1.mlmodel */,
+			);
+			path = AIModels;
+			sourceTree = "<group>";
+		};
 		93A5560E2C569B410028F8DD = {
 			isa = PBXGroup;
 			children = (
+				93B204C52C79B19E0052C0AB /* .swiftlint */,
 				93A556192C569B410028F8DD /* TestPrediction */,
 				93A5562A2C569B420028F8DD /* TestPredictionTests */,
 				93A556342C569B420028F8DD /* TestPredictionUITests */,
@@ -96,9 +138,12 @@
 		93A556192C569B410028F8DD /* TestPrediction */ = {
 			isa = PBXGroup;
 			children = (
-				9303CF1A2C58058A0017E057 /* WeightPlate1.mlmodel */,
+				93329B3F2C7478790058051C /* Info.plist */,
+				931370962C5965E1008C5774 /* AIModels */,
+				931370952C596569008C5774 /* Services */,
+				931370942C596555008C5774 /* Models */,
+				931370932C59654E008C5774 /* UI */,
 				93A5561A2C569B410028F8DD /* TestPredictionApp.swift */,
-				93A5561C2C569B410028F8DD /* ContentView.swift */,
 				93A5561E2C569B410028F8DD /* Assets.xcassets */,
 				93A556202C569B410028F8DD /* Preview Content */,
 			);
@@ -194,7 +239,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					93A556162C569B410028F8DD = {
 						CreatedOnToolsVersion = 15.4;
@@ -260,9 +305,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				937C154A2C5F5F7B00ED708F /* PredictionService.swift in Sources */,
 				93A5561D2C569B410028F8DD /* ContentView.swift in Sources */,
 				93A5561B2C569B410028F8DD /* TestPredictionApp.swift in Sources */,
-				9303CF1B2C58058A0017E057 /* WeightPlate1.mlmodel in Sources */,
+				930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */,
+				93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */,
+				931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -426,8 +474,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TestPrediction/Preview Content\"";
+				DEVELOPMENT_TEAM = 6Y93N4F467;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestPrediction/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select videos for processing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -438,7 +489,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = patron.TestPrediction;
+				PRODUCT_BUNDLE_IDENTIFIER = com.patron.TestPrediction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -454,8 +505,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TestPrediction/Preview Content\"";
+				DEVELOPMENT_TEAM = 6Y93N4F467;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestPrediction/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select videos for processing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -466,7 +520,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = patron.TestPrediction;
+				PRODUCT_BUNDLE_IDENTIFIER = com.patron.TestPrediction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -477,7 +531,6 @@
 		93A5563F2C569B420028F8DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -496,7 +549,6 @@
 		93A556402C569B420028F8DD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -515,7 +567,6 @@
 		93A556422C569B420028F8DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -532,7 +583,6 @@
 		93A556432C569B420028F8DD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
