@@ -1,6 +1,114 @@
 import AVKit
 import PhotosUI
 import SwiftUI
+import Vision
+
+typealias DetectionFrame = (frameName: String, detection: CGRect?)
+
+struct VideoPickerView: View {
+    @StateObject private var viewModel = VideoPickerViewModel()
+    @State private var isProcessing = false
+    @State private var processingProgress: Double = 0.0
+    @State private var extractor: VideoFrameExtractor?
+    @State private var videoURL: URL?
+    @State private var detections: [DetectionFrame] = []
+    @State private var extractedFramesCount: Int = 0
+
+    private var predictionService = PredictionService()
+
+    var body: some View {
+        VStack {
+            Button("Select Video") {
+                print("VideoProcessingView: Select Video button tapped")
+                viewModel.pickVideo()
+            }
+
+            if isProcessing {
+                ProgressView("Processing...")
+                    .progressViewStyle(.circular)
+                    .padding()
+            }
+
+            if let url = viewModel.videoURL {
+                Text("\(url.lastPathComponent)")
+            }
+            
+            if isProcessing {
+                ProgressView(value: processingProgress, total: 1.0)
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .padding()
+                Text("\(Int(extractedFramesCount)) frames processed")
+
+                Text("\(Int(processingProgress * 100))%")
+                    .font(.headline)
+            }
+
+            if !isProcessing {
+                List(detections, id: \.frameName) { result in
+                    Text("\(result.frameName) - \(String(describing: result.detection))")
+                }
+            }
+        }
+        .onAppear {
+            viewModel.onPickVideo = { url in
+                Task {
+                    await self.processVideo(url: url)
+                }
+
+            }
+        }
+    }
+    
+    private func processVideo(url: URL) async {
+        await MainActor.run {
+            self.isProcessing = true
+            self.processingProgress = 0.0
+        }
+
+        do {
+            let extractor = try await VideoFrameExtractor(videoURL: url)
+            self.extractor = extractor
+            
+            try await extractor.extractFrames { progress, extractedFrame, frameIndex in
+                DispatchQueue.main.async {
+                    self.processingProgress = progress
+                    self.extractedFramesCount = frameIndex
+                }
+                
+                let frameName = String(format: "frame%04d", frameIndex)
+                
+                if let frame = extractedFrame {
+                    do {
+                        let result = try self.predictionService.detectObjects(in: frame)
+                        if let detectionResult = result {
+                            addDetection(frameName, detectionResult)
+                        }
+                    } catch {
+                        print("Error processing frame: \(error.localizedDescription)")
+                    }
+                }
+                
+                if progress == 1.0 {
+                    DispatchQueue.main.async {
+                        self.isProcessing = false
+                    }
+                }
+            }
+        } catch {
+            print("Error processing video: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isProcessing = false
+            }
+        }
+    }
+    
+    private func addDetection(_ frame: String, _ detectionResult : VNRecognizedObjectObservation) {
+        let boundingBox = detectionResult.boundingBox
+        let newBoundingBox = CGRect(x: boundingBox.origin.y, y: boundingBox.origin.x, width: boundingBox.height, height: boundingBox.width)
+        detections.append((frame,newBoundingBox))
+    }
+}
+
 
 class VideoPickerViewModel: ObservableObject {
     @Published var videoURL: URL?
@@ -47,7 +155,6 @@ extension VideoPickerViewModel: PHPickerViewControllerDelegate {
 
                 guard let url = url else { return }
 
-                // Create a local copy of the video
                 let documentsDirectory = FileManager.default.urls(
                     for: .documentDirectory, in: .userDomainMask)[0]
                 let uniqueFileName = "\(UUID().uuidString).mov"
@@ -64,120 +171,6 @@ extension VideoPickerViewModel: PHPickerViewControllerDelegate {
                 } catch {
                     print("Error copying video: \(error.localizedDescription)")
                 }
-            }
-        }
-    }
-}
-
-struct VideoPickerView: View {
-    @StateObject private var viewModel = VideoPickerViewModel()
-    @State private var isProcessing = false
-    @State private var processingProgress: Double = 0.0
-    @State private var currentFrame: UIImage?
-    @State private var extractor: VideoFrameExtractor?
-    @State private var extractedFrames: [UIImage] = []
-    @State private var extractedFramesCount: Int = 0
-    @State private var predictionResults: [String] = []
-
-    private var predictionService = PredictionService()
-
-    var body: some View {
-        VStack {
-            Button("Select Video") {
-                print("VideoProcessingView: Select Video button tapped")
-                viewModel.pickVideo()
-            }
-
-            //            if let videoURL = viewModel.videoURL {
-            //                VideoPlayer(player: AVPlayer(url: videoURL))
-            //                    .frame(height: 300)
-            //            }
-
-            if isProcessing {
-                ProgressView("Processing...")
-                    .progressViewStyle(.circular)
-                    .padding()
-            }
-
-            if let url = viewModel.videoURL {
-                Text("\(url.lastPathComponent)")
-            }
-
-            //            if let currentFrame = currentFrame {
-            //                Image(uiImage: currentFrame)
-            //                    .resizable()
-            //                    .scaledToFit()
-            //                    .frame(height: 300)
-            //            }
-
-            if isProcessing {
-                ProgressView(value: processingProgress, total: 1.0)
-                    .progressViewStyle(LinearProgressViewStyle())
-                    .padding()
-
-                Text("\(Int(extractedFramesCount)) frames processed")
-
-                Text("\(Int(processingProgress * 100))%")
-                    .font(.headline)
-            }
-
-            if !isProcessing {
-                List(predictionResults, id: \.self) { result in
-                    //                    Image(uiImage: frame)
-                    //                        .resizable()
-                    //                        .scaledToFit()
-                    //                        .frame(height: 300)
-                    //                        .padding(.bottom)
-                    Text("\(result)")
-                }
-            }
-        }
-        .onAppear {
-            viewModel.onPickVideo = { url in
-                Task {
-                    await self.processVideo(url: url)
-                }
-
-            }
-        }
-    }
-
-    private func processVideo(url: URL) async {
-        isProcessing = true
-        processingProgress = 0.0
-        extractedFrames.removeAll()
-
-        do {
-            let extractor = try await VideoFrameExtractor(videoURL: url)
-            self.extractor = extractor
-
-            try await extractor.extractFrames { progress, extractedFrame in
-
-                DispatchQueue.main.async {
-                    self.processingProgress = progress
-                }
-
-                if let frame = extractedFrame {
-                    Task {
-                        let result = try self.predictionService.detectObjects(
-                            in: frame)
-
-                        DispatchQueue.main.async {
-                            self.predictionResults.append(
-                                result.first ?? "No prediction")
-                        }
-
-                    }
-                }
-            }
-
-            await MainActor.run {
-                self.isProcessing = false
-            }
-        } catch {
-            print("Error processing video: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isProcessing = false
             }
         }
     }

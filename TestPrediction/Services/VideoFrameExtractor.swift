@@ -7,6 +7,7 @@ class VideoFrameExtractor {
     private var framesExtracted = 0
     private var totalFrames: Int
     private var assetReader: AVAssetReader?
+    private let context = CIContext()
     
     init(videoURL: URL) async throws {
         self.videoAsset = AVAsset(url: videoURL)
@@ -18,7 +19,7 @@ class VideoFrameExtractor {
         self.totalFrames = Int(CMTimeGetSeconds(duration) * Float64(nominalFrameRate))
     }
     
-    func extractFrames(completion: @escaping ( Double, CGImage?) -> Void) async throws {
+    func extractFrames(completion: @escaping ( Double, CGImage?, Int) -> Void) async throws {
         guard let track = try await self.videoAsset.loadTracks(withMediaType: .video).first else {
             throw NSError(domain: "VideoFrameExtractor", code: 0, userInfo: [NSLocalizedDescriptionKey: "No video track found"])
         }
@@ -34,8 +35,6 @@ class VideoFrameExtractor {
         assetReader.add(assetReaderOutput)
         assetReader.startReading()
         
-        let context = CIContext()
-        
         let resizeFilter = CIFilter(name:"CILanczosScaleTransform")!
         
         DispatchQueue.global(qos: .userInitiated).async {
@@ -48,41 +47,32 @@ class VideoFrameExtractor {
                     
                     self.framesExtracted += 1
                     let progress = Double(self.framesExtracted) / Double(self.totalFrames)
+                    let frameIndex = self.framesExtracted
                     
                     let ciImage = CIImage(cvPixelBuffer: imageBuffer)
                     
-                    //let scale = targetSize.height / (ciImage.extent.height)
-                    //let aspectRatio = targetSize.width/((ciImage.extent.width) * scale)
-
-                    // Apply resizing
                     resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
-                    resizeFilter.setValue(1.0, forKey: kCIInputScaleKey)
-                    //resizeFilter.setValue(aspectRatio, forKey: kCIInputAspectRatioKey)
+                    resizeFilter.setValue(0.4, forKey: kCIInputScaleKey)
                     let outputImage = resizeFilter.outputImage
                     
-                    let cgImage = context.createCGImage(outputImage!, from: outputImage!.extent)
-                    //let cgImage = context.createCGImage(ciImage, from: ciImage.extent)
+                    let cgImage = self.context.createCGImage(outputImage!, from: outputImage!.extent)
                     
-                    if let cgImage = context.createCGImage(outputImage!, from: outputImage!.extent) {
+                    if let cgImage = self.context.createCGImage(outputImage!, from: outputImage!.extent) {
                         DispatchQueue.main.async {
-                            completion(progress, cgImage)
+                            completion(progress, cgImage, frameIndex)
                         }
                     }
-//                    if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-//                        //let image = UIImage(cgImage: cgImage,scale: 1.0, orientation: .right)
-//                    }
-                    
                 }
             }
         }
         
         if assetReader.status == .completed {
             DispatchQueue.main.async {
-                            completion(1.0, nil)
+                completion(1.0, nil, self.framesExtracted)
                         }
         } else if assetReader.status == .failed {
             DispatchQueue.main.async {
-                            completion(1.0, nil)
+                completion(1.0, nil, self.framesExtracted)
                         }
             throw assetReader.error ?? NSError(domain: "VideoFrameExtractor", code: 2, userInfo: [NSLocalizedDescriptionKey: "Asset reader failed"])
         }

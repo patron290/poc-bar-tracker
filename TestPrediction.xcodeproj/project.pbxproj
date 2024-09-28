@@ -18,6 +18,7 @@
 		93A5562C2C569B420028F8DD /* TestPredictionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A5562B2C569B420028F8DD /* TestPredictionTests.swift */; };
 		93A556362C569B420028F8DD /* TestPredictionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A556352C569B420028F8DD /* TestPredictionUITests.swift */; };
 		93A556382C569B420028F8DD /* TestPredictionUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A556372C569B420028F8DD /* TestPredictionUITestsLaunchTests.swift */; };
+		93ACEB962C8DACED0051F4BF /* VideoConcat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93ACEB952C8DACED0051F4BF /* VideoConcat.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		93A556312C569B420028F8DD /* TestPredictionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestPredictionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		93A556352C569B420028F8DD /* TestPredictionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionUITests.swift; sourceTree = "<group>"; };
 		93A556372C569B420028F8DD /* TestPredictionUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		93ACEB952C8DACED0051F4BF /* VideoConcat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoConcat.swift; sourceTree = "<group>"; };
 		93B204C52C79B19E0052C0AB /* .swiftlint */ = {isa = PBXFileReference; lastKnownFileType = text; path = .swiftlint; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -102,6 +104,7 @@
 			children = (
 				937C15492C5F5F7B00ED708F /* PredictionService.swift */,
 				93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */,
+				93ACEB952C8DACED0051F4BF /* VideoConcat.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -307,6 +310,7 @@
 			files = (
 				937C154A2C5F5F7B00ED708F /* PredictionService.swift in Sources */,
 				93A5561D2C569B410028F8DD /* ContentView.swift in Sources */,
+				93ACEB962C8DACED0051F4BF /* VideoConcat.swift in Sources */,
 				93A5561B2C569B410028F8DD /* TestPredictionApp.swift in Sources */,
 				930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */,
 				93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */,
