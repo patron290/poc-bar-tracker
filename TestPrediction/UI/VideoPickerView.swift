@@ -44,6 +44,17 @@ struct VideoPickerView: View {
             }
 
             if !isProcessing {
+                Button(action: {
+                    print("Click")
+                    print(self.videoURL)
+                    if let url = self.videoURL {
+                        Task {
+                            await self.overlayVideo(url, self.detections)
+                        }
+                    }
+                }, label:{
+                    Text("Text")
+                })
                 List(detections, id: \.frameName) { result in
                     Text("\(result.frameName) - \(String(describing: result.detection))")
                 }
@@ -51,13 +62,16 @@ struct VideoPickerView: View {
         }
         .onAppear {
             viewModel.onPickVideo = { url in
+                self.videoURL = url
                 Task {
                     await self.processVideo(url: url)
+                    //await self.overlayVideo(url, detections)
                 }
-
             }
         }
     }
+    
+    private let extractionCompleted = Notification.Name("extractionCompleted")
     
     private func processVideo(url: URL) async {
         await MainActor.run {
@@ -91,6 +105,7 @@ struct VideoPickerView: View {
                 if progress == 1.0 {
                     DispatchQueue.main.async {
                         self.isProcessing = false
+                        
                     }
                 }
             }
@@ -99,6 +114,35 @@ struct VideoPickerView: View {
             await MainActor.run {
                 self.isProcessing = false
             }
+        }
+    }
+    
+    private func overlayVideo(_ video: URL, _ detectionFrames: [DetectionFrame]) async {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("Error: Couldn't find documents directory")
+            return
+        }
+        
+        // Define the output file URL
+        let outputURL = documentsDirectory.appendingPathComponent("outputVideo.mp4")
+        print("Output directory: \(outputURL.path)")
+        print("Starting video processing...")
+        
+        if FileManager.default.fileExists(atPath: outputURL.path) {
+            do {
+                try FileManager.default.removeItem(at: outputURL)
+            } catch {
+                print("Error removing output file: \(error.localizedDescription)")
+            }
+        }
+        
+        do {
+            // Call the async function and await its result
+            let resultURL = try await overlayDetectionsOnVideo(inputURL: video, detectionFrames: detectionFrames, outputURL: outputURL)
+            print("Video processing completed successfully")
+            print("Output video saved at: \(resultURL.path)")
+        } catch {
+            print("Error processing video: \(error.localizedDescription)")
         }
     }
     
