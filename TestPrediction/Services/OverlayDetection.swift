@@ -8,178 +8,123 @@
 import AVFoundation
 import UIKit
 
-func overlayDetectionsOnVideo(inputURL: URL, detectionFrames: [DetectionFrame], outputURL: URL) async throws -> URL {
+func overlayDetectionsOnVideo(
+    inputURL: URL, detectionFrames: [DetectionFrame], outputURL: URL
+) async throws -> URL {
     // Step 1: Create an AVAsset from the input URL
-    let asset = AVAsset(url: inputURL)
-    
+    let originalVideo = AVURLAsset(url: inputURL)
+
     // Step 2: Create an AVMutableComposition
     let composition = AVMutableComposition()
-    
-    // Add video track
-    guard let videoTrack = try await asset.loadTracks(withMediaType: .video).first else {
-        throw NSError(domain: "No video track", code: 0, userInfo: nil)
+
+    guard
+        let compositionVideoTrack = composition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: kCMPersistentTrackID_Invalid)
+    else {
+        throw NSError(
+            domain: "Cannot create composition video track", code: 0,
+            userInfo: nil)
     }
-    
-    guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video,
-                                                                  preferredTrackID: kCMPersistentTrackID_Invalid) else {
-        throw NSError(domain: "Cannot create composition video track", code: 0, userInfo: nil)
-    }
-    
-    let duration = try await asset.load(.duration)
+
     do {
-        try compositionVideoTrack.insertTimeRange(CMTimeRange(start: .zero, duration: duration),
-                                                  of: videoTrack,
-                                                  at: .zero)
+        let timeRange = CMTimeRange(
+            start: .zero, duration: try await originalVideo.load(.duration))
+
+        try compositionVideoTrack.insertTimeRange(
+            timeRange,
+            of: try await originalVideo.loadTracks(withMediaType: .video)[0],
+            at: .zero)
     } catch {
         throw error
     }
-    
-    // Step 3: Create AVMutableVideoComposition
-    let videoComposition = AVMutableVideoComposition()
-    let nominalFrameRate = try await videoTrack.load(.nominalFrameRate)
-    videoComposition.frameDuration = CMTimeMake(value: 1, timescale: Int32(nominalFrameRate))
-    let naturalSize = try await videoTrack.load(.naturalSize)
-    
-    let preferredTransform = try await videoTrack.load(.preferredTransform)
-    
-    // Determine the video orientation and set renderSize accordingly
-    var videoSize = naturalSize
-    var isPortrait = false
-    let angle = atan2(preferredTransform.b, preferredTransform.a) * 180 / .pi
-    if angle == 90 || angle == -90 {
-        isPortrait = true
-        videoSize = CGSize(width: naturalSize.height, height: naturalSize.width)
+
+    let originalSize = try await originalVideo.loadTracks(withMediaType: .video)
+        .first!.load(.naturalSize)
+    let duration = try await originalVideo.load(.duration)
+
+    let assetWriterSettings =
+        [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: originalSize.width,
+            AVVideoHeightKey: originalSize.height,
+        ] as [String: Any]
+
+    do {
+        try FileManager.default.removeItem(at: outputURL)
+    } catch {
+        print("Could not remove file \(error.localizedDescription)")
+    }
+
+    guard let assetwriter = try? AVAssetWriter(outputURL: outputURL, fileType: .mov) else {
+      abort()
     }
     
-    videoComposition.renderSize = videoSize
-    //videoComposition.renderSize = naturalSize
+    let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: assetWriterSettings)
+    let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: nil)
+    //add the input to the asset writer
+    assetwriter.add(assetWriterInput)
+    //begin the session
+    assetwriter.startWriting()
+    assetwriter.startSession(atSourceTime: CMTime.zero)
+    //determine how many frames we need to generate
+    let framesPerSecond = 30.0
+
+    var pixelBuffer: CVPixelBuffer?
     
-    // Step 4: Create overlay layers
-    let overlayLayer = CALayer()
-    overlayLayer.frame = CGRect(origin: .zero, size: naturalSize)
-    
-    let parentLayer = CALayer()
-    let videoLayer = CALayer()
-    parentLayer.frame = CGRect(origin: .zero, size: naturalSize)
-    videoLayer.frame = CGRect(origin: .zero, size: naturalSize)
-    
-    parentLayer.addSublayer(videoLayer)
-    parentLayer.addSublayer(overlayLayer)
-    
-    // Step 5: Create animation for detection rectangles
-    let detectionLayer = CAShapeLayer()
-    detectionLayer.frame = overlayLayer.bounds
-    detectionLayer.fillColor = UIColor.clear.cgColor
-    detectionLayer.strokeColor = UIColor.red.cgColor
-    detectionLayer.lineWidth = 2.0
-    detectionLayer.opacity = 1.0
-    
-    overlayLayer.addSublayer(detectionLayer)
-    
-    let pathAnimation = CAKeyframeAnimation(keyPath: "path")
-    var times = [NSNumber]()
-    var values = [CGPath]()
-    
-    let fps = nominalFrameRate
-    let frameDuration = CMTimeMake(value: 1, timescale: Int32(fps))
-    let totalFrames = Int(CMTimeGetSeconds(duration) * Double(fps))
-    
-    let testRect = CGRect(x: 100, y: 100, width: 200, height: 200) // Igazítsd a videó méretéhez szükség szerint
-    let testPath = UIBezierPath(rect: testRect).cgPath
-    times.append(0) // Kezdeti időpont
-    values.append(testPath)
-    
-    for detectionFrame in detectionFrames {
-        let frameIndexStr = detectionFrame.frameName
-        let frameNumberStr = frameIndexStr.replacingOccurrences(of: "frame", with: "")
-        if let frameNumber = Int(frameNumberStr) {
-            let time = CMTimeMultiply(frameDuration, multiplier: Int32(frameNumber - 1))
-            let timeInSeconds = CMTimeGetSeconds(time)
-            let normalizedTime = timeInSeconds / CMTimeGetSeconds(duration)
-            times.append(NSNumber(value: normalizedTime))
+    for (frameIndex, detectionFrame) in detectionFrames.enumerated() {
+        let renderer = UIGraphicsImageRenderer(size: originalSize)
+
+        let image = renderer.image { context in
+            context.cgContext.setLineWidth(4)
+            context.cgContext.setStrokeColor(UIColor.green.cgColor)
+
+            let rect = CGRect(
+                x: detectionFrame.detection!.minX * originalSize.width,
+                y: detectionFrame.detection!.minY * originalSize.height,
+                width: detectionFrame.detection!.width * originalSize.width,
+                height: detectionFrame.detection!.height * originalSize.height)
+
+            context.stroke(rect)
+        }
+
+        var staticImage = CIImage(image: image)!
+
+        let attrs =
+            [
+                kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
+                kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue,
+            ] as CFDictionary
+
+        let width: Int = Int(staticImage.extent.size.width)
+        let height: Int = Int(staticImage.extent.size.height)
+
+        CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            kCVPixelFormatType_32BGRA,
+            attrs,
+            &pixelBuffer)
+        //create a CIContext
+        let bufferContext = CIContext()
+        //use the context to render the image into the pixelBuffer
+        bufferContext.render(staticImage, to: pixelBuffer!)
+        
+        if assetWriterInput.isReadyForMoreMediaData {
+            let frameTime = CMTimeMake(value: Int64(frameIndex), timescale: Int32(framesPerSecond))
+            //append the contents of the pixelBuffer at the correct time
+            assetWriterAdaptor.append(pixelBuffer!, withPresentationTime: frameTime)
             
-            if let detection = detectionFrame.detection {
-                // Skalázás szükség szerint
-                var scaledRect = CGRect(
-                    x: detection.origin.x * naturalSize.width,
-                    y: detection.origin.y * naturalSize.height,
-                    width: detection.size.width * naturalSize.width,
-                    height: detection.size.height * naturalSize.height
-                )
-                
-                if isPortrait {
-                   // Elforgatás, ha a videó portré orientációjú
-                   let temp = scaledRect.origin.x
-                   scaledRect.origin.x = scaledRect.origin.y
-                   scaledRect.origin.y = videoSize.height - temp - scaledRect.height
-               }
-                let path = UIBezierPath(rect: scaledRect).cgPath
-                values.append(path)
-                print("Frame \(frameNumber): \(scaledRect)")
-            } else {
-                values.append(UIBezierPath().cgPath)
-                print("Frame \(frameNumber): No detection")
-            }
-        }
+          }
     }
     
-    guard !values.isEmpty else {
-        throw NSError(domain: "No detection paths to animate", code: 0, userInfo: nil)
+    assetWriterInput.markAsFinished()
+    assetwriter.finishWriting {
+      pixelBuffer = nil
+      //outputMovieURL now has the video
+      print("Finished video location: \(outputURL)")
     }
-    
-    pathAnimation.keyTimes = times
-    pathAnimation.values = values
-    pathAnimation.duration = CMTimeGetSeconds(duration)
-    pathAnimation.isRemovedOnCompletion = false
-    pathAnimation.fillMode = .forwards
-    detectionLayer.add(pathAnimation, forKey: "pathAnimation")
-    
-    // Set initial path
-    if let firstPath = values.first {
-        detectionLayer.path = firstPath
-    }
-    
-    // Step 6: Apply animation tool
-    videoComposition.animationTool = AVVideoCompositionCoreAnimationTool(postProcessingAsVideoLayer: videoLayer, in: parentLayer)
-    
-    // Instruction
-    let instruction = AVMutableVideoCompositionInstruction()
-    instruction.timeRange = CMTimeRange(start: .zero, duration: duration)
-    let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack)
-    layerInstruction.setTransform(preferredTransform, at: .zero)
-    instruction.layerInstructions = [layerInstruction]
-    videoComposition.instructions = [instruction]
-    
-    // Step 7: Export the video
-    guard let exportSession = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else {
-        throw NSError(domain: "Export failed", code: 0, userInfo: nil)
-    }
-    
-    exportSession.outputURL = outputURL
-    exportSession.outputFileType = .mp4
-    exportSession.videoComposition = videoComposition
-    
-    return try await withCheckedThrowingContinuation { continuation in
-        exportSession.exportAsynchronously {
-            switch exportSession.status {
-            case .completed:
-                if let outputURL = exportSession.outputURL {
-                    continuation.resume(returning: outputURL)
-                } else {
-                    continuation.resume(throwing: NSError(domain: "Export failed", code: 0, userInfo: nil))
-                }
-            case .failed:
-                if let error = exportSession.error {
-                    print("Export failed with error: \(error.localizedDescription)")
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(throwing: NSError(domain: "Export failed", code: 0, userInfo: nil))
-                }
-            case .cancelled:
-                continuation.resume(throwing: NSError(domain: "Export cancelled", code: 0, userInfo: nil))
-            default:
-                break
-            }
-        }
-    }
+
+    return outputURL
 }
