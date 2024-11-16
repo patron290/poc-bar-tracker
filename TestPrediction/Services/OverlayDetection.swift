@@ -46,8 +46,8 @@ func overlayDetectionsOnVideo(
     let assetWriterSettings =
         [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: originalSize.width,
-            AVVideoHeightKey: originalSize.height,
+            AVVideoWidthKey: originalSize.height,
+            AVVideoHeightKey: originalSize.width,
         ] as [String: Any]
 
     do {
@@ -60,63 +60,73 @@ func overlayDetectionsOnVideo(
       abort()
     }
     
+    // ORIENTATION!!!
+    let width: Int = Int(originalSize.height)
+    let height: Int = Int(originalSize.width)
+    
     let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: assetWriterSettings)
-    let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: nil)
-    //add the input to the asset writer
+    assetWriterInput.expectsMediaDataInRealTime = false
     assetwriter.add(assetWriterInput)
-    //begin the session
+    
+    let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: [
+        kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),
+        kCVPixelBufferWidthKey as String: width,
+        kCVPixelBufferHeightKey as String: height
+    ])
+    
+    
     assetwriter.startWriting()
     assetwriter.startSession(atSourceTime: CMTime.zero)
-    //determine how many frames we need to generate
-    let framesPerSecond = 30.0
+    let framesPerSecond = 30
 
     var pixelBuffer: CVPixelBuffer?
+
     
     for (frameIndex, detectionFrame) in detectionFrames.enumerated() {
-        let renderer = UIGraphicsImageRenderer(size: originalSize)
 
-        let image = renderer.image { context in
-            context.cgContext.setLineWidth(4)
-            context.cgContext.setStrokeColor(UIColor.green.cgColor)
-
-            let rect = CGRect(
-                x: detectionFrame.detection!.minX * originalSize.width,
-                y: detectionFrame.detection!.minY * originalSize.height,
-                width: detectionFrame.detection!.width * originalSize.width,
-                height: detectionFrame.detection!.height * originalSize.height)
-
-            context.stroke(rect)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+        ) else {
+            print("Failed to create CGContext")
+            return outputURL
         }
-
-        var staticImage = CIImage(image: image)!
-
-        let attrs =
-            [
-                kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
-                kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue,
-            ] as CFDictionary
-
-        let width: Int = Int(staticImage.extent.size.width)
-        let height: Int = Int(staticImage.extent.size.height)
-
-        CVPixelBufferCreate(
-            kCFAllocatorDefault,
-            width,
-            height,
-            kCVPixelFormatType_32BGRA,
-            attrs,
-            &pixelBuffer)
-        //create a CIContext
-        let bufferContext = CIContext()
-        //use the context to render the image into the pixelBuffer
-        bufferContext.render(staticImage, to: pixelBuffer!)
         
-        if assetWriterInput.isReadyForMoreMediaData {
-            let frameTime = CMTimeMake(value: Int64(frameIndex), timescale: Int32(framesPerSecond))
-            //append the contents of the pixelBuffer at the correct time
-            assetWriterAdaptor.append(pixelBuffer!, withPresentationTime: frameTime)
+        context.setFillColor(CGColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        
+        
+        let rect = CGRect(
+                        x: detectionFrame.detection!.minX * originalSize.width,
+                        y: detectionFrame.detection!.minY * originalSize.height,
+                        width: detectionFrame.detection!.width * originalSize.width,
+                        height: detectionFrame.detection!.height * originalSize.height)
+        context.setStrokeColor(UIColor.green.cgColor)
+        context.setLineWidth(4)
+        context.stroke(rect)
+        let cgImage = context.makeImage()!
+
+        let presentationTime = CMTimeMake(value: Int64(frameIndex), timescale: Int32(framesPerSecond))
+        let status = CVPixelBufferPoolCreatePixelBuffer(nil, assetWriterAdaptor.pixelBufferPool!, &pixelBuffer)
+        if status == kCVReturnSuccess, let buffer = pixelBuffer {
+            CVPixelBufferLockBaseAddress(buffer, .readOnly)
+            let context = CIContext()
+            let ciImage = CIImage(cgImage: cgImage)
+            context.render(ciImage, to: buffer)
+            assetWriterAdaptor.append(buffer, withPresentationTime: presentationTime)
+            CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
+        } else {
+            print("Failed to create or lock pixel buffer")
             
-          }
+            return inputURL
+        }
+          
     }
     
     assetWriterInput.markAsFinished()
