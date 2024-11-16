@@ -64,7 +64,7 @@ struct VideoPickerView: View {
             }
             
             List(alreadySavedVideos, id: \.self) { videoURL in
-                            HStack {
+                HStack {
                     Text(videoURL.lastPathComponent)
                     Spacer()
                     Button("Process") {
@@ -132,6 +132,7 @@ struct VideoPickerView: View {
     }
     
     private func overlayVideo(_ video: URL, _ detectionFrames: [DetectionFrame]) async {
+        isExporting = true
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             print("Error: Couldn't find documents directory")
             return
@@ -147,7 +148,9 @@ struct VideoPickerView: View {
             let resultURL = try await overlayDetectionsOnVideo(inputURL: video, detectionFrames: detectionFrames, outputURL: outputURL)
             print("Video processing completed successfully")
             print("Output video saved at: \(resultURL.path)")
+            isExporting = false
         } catch {
+            isExporting = false
             print("Error processing video: \(error.localizedDescription)")
         }
     }
