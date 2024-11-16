@@ -8,11 +8,18 @@ typealias DetectionFrame = (frameName: String, detection: CGRect?)
 struct VideoPickerView: View {
     @StateObject private var viewModel = VideoPickerViewModel()
     @State private var isProcessing = false
+    @State private var isExporting = false
     @State private var processingProgress: Double = 0.0
     @State private var extractor: VideoFrameExtractor?
     @State private var videoURL: URL?
     @State private var detections: [DetectionFrame] = []
     @State private var extractedFramesCount: Int = 0
+    
+    @State private var alreadySavedVideos: [URL]
+    
+    init(alreadySavedVideos: [URL] = []) {
+        _alreadySavedVideos = State(initialValue: alreadySavedVideos)
+    }
 
     private var predictionService = PredictionService()
 
@@ -22,9 +29,22 @@ struct VideoPickerView: View {
                 print("VideoProcessingView: Select Video button tapped")
                 viewModel.pickVideo()
             }
+            .buttonStyle(.bordered)
+            
+            if !isProcessing && videoURL != nil {
+                Button("Export Video") {
+                    if let url = self.videoURL {
+                        Task {
+                            await self.overlayVideo(url, self.detections)
+                        }
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
 
-            if isProcessing {
-                ProgressView("Processing...")
+            if isProcessing || isExporting {
+                let text = isProcessing ? "Processing..." : "Exporting..."
+                ProgressView(text)
                     .progressViewStyle(.circular)
                     .padding()
             }
@@ -42,36 +62,30 @@ struct VideoPickerView: View {
                 Text("\(Int(processingProgress * 100))%")
                     .font(.headline)
             }
-
-            if !isProcessing {
-                Button(action: {
-                    print("Click")
-                    print(self.videoURL)
-                    if let url = self.videoURL {
+            
+            List(alreadySavedVideos, id: \.self) { videoURL in
+                            HStack {
+                    Text(videoURL.lastPathComponent)
+                    Spacer()
+                    Button("Process") {
                         Task {
-                            await self.overlayVideo(url, self.detections)
+                            await self.processVideo(url: videoURL)
                         }
+                        self.videoURL = videoURL
                     }
-                }, label:{
-                    Text("Text")
-                })
-                List(detections, id: \.frameName) { result in
-                    Text("\(result.frameName) - \(String(describing: result.detection))")
+                    .buttonStyle(.bordered)
                 }
             }
         }
         .onAppear {
+            if alreadySavedVideos.isEmpty {
+                alreadySavedVideos = fetchVideosFromDocumentFolder()
+            }
             viewModel.onPickVideo = { url in
-                self.videoURL = url
-                Task {
-                    await self.processVideo(url: url)
-                    //await self.overlayVideo(url, detections)
-                }
+                alreadySavedVideos.append(url)
             }
         }
     }
-    
-    private let extractionCompleted = Notification.Name("extractionCompleted")
     
     private func processVideo(url: URL) async {
         await MainActor.run {
@@ -82,7 +96,7 @@ struct VideoPickerView: View {
         do {
             let extractor = try await VideoFrameExtractor(videoURL: url)
             self.extractor = extractor
-            
+            detections = []
             try await extractor.extractFrames { progress, extractedFrame, frameIndex in
                 DispatchQueue.main.async {
                     self.processingProgress = progress
@@ -128,14 +142,6 @@ struct VideoPickerView: View {
         print("Output directory: \(outputURL.path)")
         print("Starting video processing...")
         
-        if FileManager.default.fileExists(atPath: outputURL.path) {
-            do {
-                try FileManager.default.removeItem(at: outputURL)
-            } catch {
-                print("Error removing output file: \(error.localizedDescription)")
-            }
-        }
-        
         do {
             // Call the async function and await its result
             let resultURL = try await overlayDetectionsOnVideo(inputURL: video, detectionFrames: detectionFrames, outputURL: outputURL)
@@ -150,6 +156,21 @@ struct VideoPickerView: View {
         let boundingBox = detectionResult.boundingBox
         let newBoundingBox = CGRect(x: boundingBox.origin.y, y: boundingBox.origin.x, width: boundingBox.height, height: boundingBox.width)
         detections.append((frame,newBoundingBox))
+    }
+    
+    private func fetchVideosFromDocumentFolder() -> [URL] {
+        let fileManager = FileManager.default
+        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else { return []
+        }
+        
+        do {
+            let fileURLs = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
+            return fileURLs.filter { $0.pathExtension == "mov" || $0.pathExtension == ".mp4"}
+        } catch {
+            print(error.localizedDescription)
+            return []
+        }
+        
     }
 }
 
@@ -218,4 +239,14 @@ extension VideoPickerViewModel: PHPickerViewControllerDelegate {
             }
         }
     }
+}
+
+#Preview {
+    let savedVideosExample: [URL] = [
+        URL(fileURLWithPath: "/Users/your_username/Documents/example1.mov"),
+        URL(fileURLWithPath: "/Users/your_username/Documents/example2.mp4"),
+        URL(fileURLWithPath: "/Users/your_username/Documents/example3.mov")
+    ]
+
+    VideoPickerView(alreadySavedVideos: savedVideosExample)
 }
