@@ -25,11 +25,18 @@ struct VideoPickerView: View {
 
     var body: some View {
         VStack {
-            Button("Select Video") {
-                print("VideoProcessingView: Select Video button tapped")
-                viewModel.pickVideo()
+            HStack {
+                Spacer()
+                Button {
+                    print("VideoProcessingView: Select Video button tapped")
+                    viewModel.pickVideo()
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+                .padding(.trailing, 20)
             }
-            .buttonStyle(.bordered)
+            
             
             if !isProcessing && videoURL != nil {
                 Button("Export Video") {
