@@ -10,6 +10,7 @@
 		930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930384962C6D257F007641D3 /* VideoPickerView.swift */; };
 		93120E3C2CAC3AC0007330CB /* OverlayDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93120E3B2CAC3AC0007330CB /* OverlayDetection.swift */; };
 		931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 931370972C5965EB008C5774 /* WeightPlate1.mlmodel */; };
+		931A44742CEE55E10080BE96 /* VideoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931A44732CEE55E10080BE96 /* VideoDetailView.swift */; };
 		935A11842CED131100075E6C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935A11832CED131100075E6C /* HomeView.swift */; };
 		937C154A2C5F5F7B00ED708F /* PredictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 937C15492C5F5F7B00ED708F /* PredictionService.swift */; };
 		93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */; };
@@ -44,6 +45,7 @@
 		930384962C6D257F007641D3 /* VideoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPickerView.swift; sourceTree = "<group>"; };
 		93120E3B2CAC3AC0007330CB /* OverlayDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayDetection.swift; sourceTree = "<group>"; };
 		931370972C5965EB008C5774 /* WeightPlate1.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = WeightPlate1.mlmodel; sourceTree = "<group>"; };
+		931A44732CEE55E10080BE96 /* VideoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDetailView.swift; sourceTree = "<group>"; };
 		93329B3F2C7478790058051C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		935A11832CED131100075E6C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		937C15492C5F5F7B00ED708F /* PredictionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionService.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 				935A11832CED131100075E6C /* HomeView.swift */,
 				93A5561C2C569B410028F8DD /* ContentView.swift */,
 				930384962C6D257F007641D3 /* VideoPickerView.swift */,
+				931A44732CEE55E10080BE96 /* VideoDetailView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -323,6 +326,7 @@
 				930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */,
 				93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */,
 				931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */,
+				931A44742CEE55E10080BE96 /* VideoDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,6 +494,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestPrediction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SteelSpotter;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select videos for processing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -521,6 +526,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestPrediction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SteelSpotter;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select videos for processing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
