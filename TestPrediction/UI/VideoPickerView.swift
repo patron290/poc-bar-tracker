@@ -1,28 +1,34 @@
 import AVKit
 import PhotosUI
 import SwiftUI
+import CoreData
 
 struct VideoPickerView: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel = VideoPickerViewModel()
     @State private var videoURL: URL?
-    @State private var alreadySavedVideos: [URL] = []
+    
+    @FetchRequest(
+        entity: VideoEntity.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \VideoEntity.videoUrl, ascending: true)]
+    )
+    var videos: FetchedResults<VideoEntity>
 
     var body: some View {
         VStack {
-
-            if let url = viewModel.videoURL {
-                Text("\(url.lastPathComponent)")
-            }
-            
             videoList
-           
         }
         .onAppear {
-            if alreadySavedVideos.isEmpty {
-                alreadySavedVideos = fetchVideosFromDocumentFolder()
-            }
+            print(videos)
             viewModel.onPickVideo = { url in
-                alreadySavedVideos.append(url)
+                let video = VideoEntity(context: viewContext)
+                video.videoName = url.lastPathComponent
+                video.videoUrl = url
+                do {
+                    try viewContext.save()
+                } catch {
+                    print("Error saving video: \(error)")
+                }
             }
         }
     }
@@ -39,31 +45,18 @@ struct VideoPickerView: View {
                         Label("Add", systemImage: "plus")
                     }
                 }
-                ForEach(alreadySavedVideos, id: \.self) { videoURL in
-                    NavigationLink {
-                        VideoDetailView(videoURL: videoURL)
-                    } label: {
-                        Text(videoURL.path())
+                ForEach(videos, id: \.objectID) { video in
+                    if let videoName = video.videoName {
+                        NavigationLink {
+                            VideoDetailView(videoEntity: video)
+                        } label: {
+                            Text(videoName)
+                        }
                     }
                 }
             }
             .navigationTitle("Videos")
         }
-    }
-      
-    private func fetchVideosFromDocumentFolder() -> [URL] {
-        let fileManager = FileManager.default
-        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else { return []
-        }
-        
-        do {
-            let fileURLs = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
-            return fileURLs.filter { $0.pathExtension == "mov" || $0.pathExtension == ".mp4"}
-        } catch {
-            print(error.localizedDescription)
-            return []
-        }
-        
     }
 }
 
@@ -136,4 +129,5 @@ extension VideoPickerViewModel: PHPickerViewControllerDelegate {
 
 #Preview {
     VideoPickerView()
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

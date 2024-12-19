@@ -12,7 +12,10 @@
 		931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 931370972C5965EB008C5774 /* WeightPlate1.mlmodel */; };
 		931A44742CEE55E10080BE96 /* VideoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931A44732CEE55E10080BE96 /* VideoDetailView.swift */; };
 		935A11842CED131100075E6C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 935A11832CED131100075E6C /* HomeView.swift */; };
+		93677DCE2D11E39F00D4437A /* PredictionResultEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93677DCD2D11E39F00D4437A /* PredictionResultEntity.swift */; };
 		937C154A2C5F5F7B00ED708F /* PredictionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 937C15492C5F5F7B00ED708F /* PredictionService.swift */; };
+		9389D2452D00B27200E1AA8E /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 9389D2432D00B27200E1AA8E /* Model.xcdatamodeld */; };
+		9389D2472D00B2EB00E1AA8E /* Persistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9389D2462D00B2EB00E1AA8E /* Persistance.swift */; };
 		93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */; };
 		93A5561B2C569B410028F8DD /* TestPredictionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A5561A2C569B410028F8DD /* TestPredictionApp.swift */; };
 		93A5561D2C569B410028F8DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A5561C2C569B410028F8DD /* ContentView.swift */; };
@@ -48,7 +51,10 @@
 		931A44732CEE55E10080BE96 /* VideoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDetailView.swift; sourceTree = "<group>"; };
 		93329B3F2C7478790058051C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		935A11832CED131100075E6C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		93677DCD2D11E39F00D4437A /* PredictionResultEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionResultEntity.swift; sourceTree = "<group>"; };
 		937C15492C5F5F7B00ED708F /* PredictionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionService.swift; sourceTree = "<group>"; };
+		9389D2442D00B27200E1AA8E /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
+		9389D2462D00B2EB00E1AA8E /* Persistance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistance.swift; sourceTree = "<group>"; };
 		93A182B32C73125A0034D1C8 /* VideoFrameExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrameExtractor.swift; sourceTree = "<group>"; };
 		93A556172C569B410028F8DD /* TestPrediction.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestPrediction.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93A5561A2C569B410028F8DD /* TestPredictionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPredictionApp.swift; sourceTree = "<group>"; };
@@ -100,11 +106,13 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
-		931370942C596555008C5774 /* Models */ = {
+		931370942C596555008C5774 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				9389D2462D00B2EB00E1AA8E /* Persistance.swift */,
+				93677DCD2D11E39F00D4437A /* PredictionResultEntity.swift */,
 			);
-			path = Models;
+			path = Data;
 			sourceTree = "<group>";
 		};
 		931370952C596569008C5774 /* Services */ = {
@@ -129,6 +137,7 @@
 		93A5560E2C569B410028F8DD = {
 			isa = PBXGroup;
 			children = (
+				9389D2432D00B27200E1AA8E /* Model.xcdatamodeld */,
 				93B204C52C79B19E0052C0AB /* .swiftlint */,
 				93A556192C569B410028F8DD /* TestPrediction */,
 				93A5562A2C569B420028F8DD /* TestPredictionTests */,
@@ -153,7 +162,7 @@
 				93329B3F2C7478790058051C /* Info.plist */,
 				931370962C5965E1008C5774 /* AIModels */,
 				931370952C596569008C5774 /* Services */,
-				931370942C596555008C5774 /* Models */,
+				931370942C596555008C5774 /* Data */,
 				931370932C59654E008C5774 /* UI */,
 				93A5561A2C569B410028F8DD /* TestPredictionApp.swift */,
 				93A5561E2C569B410028F8DD /* Assets.xcassets */,
@@ -322,10 +331,13 @@
 				93A5561D2C569B410028F8DD /* ContentView.swift in Sources */,
 				93120E3C2CAC3AC0007330CB /* OverlayDetection.swift in Sources */,
 				93ACEB962C8DACED0051F4BF /* VideoConcat.swift in Sources */,
+				9389D2472D00B2EB00E1AA8E /* Persistance.swift in Sources */,
 				93A5561B2C569B410028F8DD /* TestPredictionApp.swift in Sources */,
 				930384972C6D257F007641D3 /* VideoPickerView.swift in Sources */,
 				93A182B42C73125A0034D1C8 /* VideoFrameExtractor.swift in Sources */,
+				93677DCE2D11E39F00D4437A /* PredictionResultEntity.swift in Sources */,
 				931370982C596618008C5774 /* WeightPlate1.mlmodel in Sources */,
+				9389D2452D00B27200E1AA8E /* Model.xcdatamodeld in Sources */,
 				931A44742CEE55E10080BE96 /* VideoDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -654,6 +666,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		9389D2432D00B27200E1AA8E /* Model.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				9389D2442D00B27200E1AA8E /* Model.xcdatamodel */,
+			);
+			currentVersion = 9389D2442D00B27200E1AA8E /* Model.xcdatamodel */;
+			path = Model.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 93A5560F2C569B410028F8DD /* Project object */;
 }

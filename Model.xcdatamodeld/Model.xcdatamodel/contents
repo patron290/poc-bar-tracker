@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="24C101" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="PredictionResultEntity" representedClassName="PredictionResultEntity" parentEntity="VideoEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="frameIndex" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="height" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="width" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="x" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="y" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="video" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="VideoEntity" inverseName="predictions" inverseEntity="VideoEntity"/>
+    </entity>
+    <entity name="VideoEntity" representedClassName="VideoEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="videoName" optional="YES" attributeType="String"/>
+        <attribute name="videoUrl" optional="YES" attributeType="URI"/>
+        <relationship name="predictions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PredictionResultEntity" inverseName="video" inverseEntity="PredictionResultEntity"/>
+    </entity>
+</model>

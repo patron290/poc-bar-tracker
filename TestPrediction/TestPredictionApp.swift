@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct TestPredictionApp: App {
+    let presistenceController = PersistenceController.shared
+    
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .environment(\.managedObjectContext, presistenceController.container.viewContext)
         }
     }
 }
